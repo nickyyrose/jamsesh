@@ -1,7 +1,10 @@
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm import validates
 from sqlalchemy_serializer import SerializerMixin
 from sqlalchemy.ext.associationproxy import association_proxy
-
-from config import db
+from sqlalchemy.ext.hybrid import hybrid_property
+from config import bcrypt, db
+import re
 
 # Models go here!
 
@@ -37,7 +40,7 @@ class User(db.Model, SerializerMixin):
         self._password_hash = bcrypt.generate_password_hash(password.encode('utf-8')).decode('utf-8')
 
     def authenticate(self, password):
-        return bcrypt.check_password_hash(self._paswword_hash, password.encode('utf-8'))
+        return bcrypt.check_password_hash(self._password_hash, password.encode('utf-8'))
     
     def __repr__(self):
         return f'<User {self.name}>'
@@ -138,7 +141,7 @@ class Picture(db.Model, SerializerMixin):
 class Friend(db.Model, SerializerMixin):
     __tablename__ = "friends"
 
-    id = db.Column(id.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     friender = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     friended = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
@@ -151,7 +154,7 @@ class Friend(db.Model, SerializerMixin):
 class Message(db.Model, SerializerMixin):
     __tablename__ = "Messages"
 
-    id = db.Column(id.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     sender_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     receiver_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     message =db.Column(db.String)
