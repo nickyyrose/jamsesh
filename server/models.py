@@ -11,16 +11,22 @@ class User(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
     bio = db.Column(db.String)
-    email = db.Column(db.String, nullable=False)
+    email = db.Column(db.String, unique=True, nullable=False)
     _password_hash = db.Column(db.String, nullable=False)
 
-    #######add relationships for User########
+#######add relationships for User########
 
     @validates('name')
     def validate_name(self, key, name):
         if not name:
             raise ValueError('must have name')
         return name 
+    
+    @validates('email')
+    def validate_email(self, key, email):
+        if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
+            raise ValueError("Invalid email address")
+        return email
     
     @hybrid_property
     def password_hash(self):
@@ -46,7 +52,12 @@ class Instrument(db.Model, SerializerMixin):
 
 
 #####add relationship for Instrument#########
-#####add validations for Instrument##########
+    @validates('name')
+    def validate_name(self, key, name):
+        if not name:
+            raise ValueError('must have name')
+        return name 
+
 
 #######################################################################
 
@@ -58,7 +69,11 @@ class Genre(db.Model, SerializerMixin):
 
 
 #####add relationship for Genre#########
-#####add validations for Genre##########
+    @validates('name')
+    def validate_name(self, key, name):
+        if not name:
+            raise ValueError('must have name')
+        return name
 
 #######################################################################
 
@@ -99,7 +114,11 @@ class Song(db.Model, SerializerMixin):
 
 
 #####add relationship
-#####add validations
+    @validates('name')
+    def validate_name(self, key, name):
+        if not name:
+            raise ValueError('must have name')
+        return name
 
 #######################################################################
 
