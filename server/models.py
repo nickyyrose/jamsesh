@@ -17,7 +17,15 @@ class User(db.Model, SerializerMixin):
     email = db.Column(db.String, unique=True, nullable=False)
     _password_hash = db.Column(db.String, nullable=False)
 
-#######add relationships for User########
+    #######add relationships for User########
+    instruments = db.relationship('UserInstrument', backref='user', cascade='all, delete-orphan')
+    genres = db.relationship('UserGenre', backref='user', cascade='all, delete-orphan')
+    pictures = db.relationship('Picture', backref='user', cascade='all, delete-orphan')
+    songs = db.relationship('Song', backref='user', cascade='all, delete-orphan')
+    sent_messages = db.relationship('Message', foreign_keys='Message.sender_id', backref='sender', cascade='all, delete-orphan')
+    received_messages = db.relationship('Message', foreign_keys='Message.receiver_id', backref='receiver', cascade='all, delete-orphan')
+    friends = db.relationship('Friend', foreign_keys='Friend.friender', backref='friender_user', cascade='all, delete-orphan')
+    friended = db.relationship('Friend', foreign_keys='Friend.friended', backref='friended_user', cascade='all, delete-orphan')
 
     @validates('name')
     def validate_name(self, key, name):
@@ -45,7 +53,7 @@ class User(db.Model, SerializerMixin):
     def __repr__(self):
         return f'<User {self.name}>'
     
-#######################################################################
+    #######################################################################
 
 class Instrument(db.Model, SerializerMixin):
     __tablename__ = "instruments"
@@ -55,6 +63,8 @@ class Instrument(db.Model, SerializerMixin):
 
 
 #####add relationship for Instrument#########
+    users = db.relationship('UserInstrument', backref='instrument', cascade='all, delete-orphan')
+
     @validates('name')
     def validate_name(self, key, name):
         if not name:
@@ -72,6 +82,8 @@ class Genre(db.Model, SerializerMixin):
 
 
 #####add relationship for Genre#########
+    users = db.relationship('UserGenre', backref='genre', cascade='all, delete-orphan')
+
     @validates('name')
     def validate_name(self, key, name):
         if not name:
@@ -117,6 +129,8 @@ class Song(db.Model, SerializerMixin):
 
 
 #####add relationship
+    user = db.relationship('User', backref=db.backref('songs', cascade='all, delete-orphan'))
+
     @validates('name')
     def validate_name(self, key, name):
         if not name:
@@ -134,6 +148,8 @@ class Picture(db.Model, SerializerMixin):
 
 
 #####add relationship
+    user = db.relationship('User', backref=db.backref('pictures', cascade='all, delete-orphan'))
+
 #####add validations
 
 #######################################################################
@@ -147,6 +163,9 @@ class Friend(db.Model, SerializerMixin):
 
 
 #####add relationship
+    friender_user = db.relationship('User', foreign_keys=[friender], backref=db.backref('friends_friender', cascade='all, delete-orphan'))
+    friended_user = db.relationship('User', foreign_keys=[friended], backref=db.backref('friends_friended', cascade='all, delete-orphan'))
+
 #####add validations
 
 #######################################################################
@@ -161,6 +180,9 @@ class Message(db.Model, SerializerMixin):
 
 
 #####add relationship
+    sender = db.relationship('User', foreign_keys=[sender_id], backref=db.backref('sent_messages', cascade='all, delete-orphan'))
+    receiver = db.relationship('User', foreign_keys=[receiver_id], backref=db.backref('received_messages', cascade='all, delete-orphan'))
+
 #####add validations
 
 #######################################################################
