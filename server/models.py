@@ -17,16 +17,17 @@ class User(db.Model, SerializerMixin):
     email = db.Column(db.String, unique=True, nullable=False)
     _password_hash = db.Column(db.String, nullable=False)
 
-    #######add relationships for User########
-    instruments = db.relationship('UserInstrument', backref='user', cascade='all, delete-orphan')
-    genres = db.relationship('UserGenre', backref='user', cascade='all, delete-orphan')
-    pictures = db.relationship('Picture', backref='user', cascade='all, delete-orphan')
-    songs = db.relationship('Song', backref='user', cascade='all, delete-orphan')
-    sent_messages = db.relationship('Message', foreign_keys='Message.sender_id', backref='sender', cascade='all, delete-orphan')
-    received_messages = db.relationship('Message', foreign_keys='Message.receiver_id', backref='receiver', cascade='all, delete-orphan')
-    friends = db.relationship('Friend', foreign_keys='Friend.friender', backref='friender_user', cascade='all, delete-orphan')
-    friended = db.relationship('Friend', foreign_keys='Friend.friended', backref='friended_user', cascade='all, delete-orphan')
+    # Relationships
+    instruments = db.relationship('UserInstrument', back_populates='user', cascade='all, delete-orphan')
+    genres = db.relationship('UserGenre', back_populates='user', cascade='all, delete-orphan')
+    pictures = db.relationship('Picture', back_populates='user', cascade='all, delete-orphan')
+    songs = db.relationship('Song', back_populates='user', cascade='all, delete-orphan')
+    sent_messages = db.relationship('Message', foreign_keys='Message.sender_id', back_populates='sender', cascade='all, delete-orphan')
+    received_messages = db.relationship('Message', foreign_keys='Message.receiver_id', back_populates='receiver', cascade='all, delete-orphan')
+    friends_friender = db.relationship('Friend', foreign_keys='Friend.friender', back_populates='friender_user', cascade='all, delete-orphan')
+    friends_friended = db.relationship('Friend', foreign_keys='Friend.friended', back_populates='friended_user', cascade='all, delete-orphan')
 
+    # Validations
     @validates('name')
     def validate_name(self, key, name):
         if not name:
@@ -39,6 +40,7 @@ class User(db.Model, SerializerMixin):
             raise ValueError("Invalid email address")
         return email
     
+    # Hybrid Property for Password Hash
     @hybrid_property
     def password_hash(self):
         return self._password_hash
@@ -47,13 +49,15 @@ class User(db.Model, SerializerMixin):
     def password_hash(self,password):
         self._password_hash = bcrypt.generate_password_hash(password.encode('utf-8')).decode('utf-8')
 
+    # Authentication Method
     def authenticate(self, password):
         return bcrypt.check_password_hash(self._password_hash, password.encode('utf-8'))
     
+    # Representation Method
     def __repr__(self):
         return f'<User {self.name}>'
-    
-    #######################################################################
+
+#######################################################################
 
 class Instrument(db.Model, SerializerMixin):
     __tablename__ = "instruments"
@@ -61,16 +65,15 @@ class Instrument(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
 
+    # Relationships
+    users = db.relationship('UserInstrument', back_populates='instrument', cascade='all, delete-orphan')
 
-#####add relationship for Instrument#########
-    users = db.relationship('UserInstrument', backref='instrument', cascade='all, delete-orphan')
-
+    # Validations
     @validates('name')
     def validate_name(self, key, name):
         if not name:
             raise ValueError('must have name')
         return name 
-
 
 #######################################################################
 
@@ -80,10 +83,10 @@ class Genre(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String, nullable=False)
 
+    # Relationships
+    users = db.relationship('UserGenre', back_populates='genre', cascade='all, delete-orphan')
 
-#####add relationship for Genre#########
-    users = db.relationship('UserGenre', backref='genre', cascade='all, delete-orphan')
-
+    # Validations
     @validates('name')
     def validate_name(self, key, name):
         if not name:
@@ -99,9 +102,9 @@ class UserInstrument(db.Model, SerializerMixin):
     instrument_id = db.Column(db.Integer, db.ForeignKey('instruments.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
-
-#####add relationship
-#####add validations
+    # Relationships
+    user = db.relationship('User', back_populates='instruments')
+    instrument = db.relationship('Instrument', back_populates='users')
 
 #######################################################################
 
@@ -111,10 +114,10 @@ class UserGenre(db.Model, SerializerMixin):
     id = db.Column(db.Integer, primary_key=True)
     genre_id = db.Column(db.Integer, db.ForeignKey('genres.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    
 
-#####add relationship
-#####add validations
+    # Relationships
+    user = db.relationship('User', back_populates='genres')
+    genre = db.relationship('Genre', back_populates='users')
 
 #######################################################################
 
@@ -127,10 +130,10 @@ class Song(db.Model, SerializerMixin):
     genre = db.Column(db.String)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
+    # Relationships
+    user = db.relationship('User', back_populates='songs')
 
-#####add relationship
-    user = db.relationship('User', backref=db.backref('songs', cascade='all, delete-orphan'))
-
+    # Validations
     @validates('name')
     def validate_name(self, key, name):
         if not name:
@@ -146,11 +149,8 @@ class Picture(db.Model, SerializerMixin):
     caption = db.Column(db.String)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
-
-#####add relationship
-    user = db.relationship('User', backref=db.backref('pictures', cascade='all, delete-orphan'))
-
-#####add validations
+    # Relationships
+    user = db.relationship('User', back_populates='pictures')
 
 #######################################################################
 
@@ -161,28 +161,22 @@ class Friend(db.Model, SerializerMixin):
     friender = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     friended = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
 
-
-#####add relationship
-    friender_user = db.relationship('User', foreign_keys=[friender], backref=db.backref('friends_friender', cascade='all, delete-orphan'))
-    friended_user = db.relationship('User', foreign_keys=[friended], backref=db.backref('friends_friended', cascade='all, delete-orphan'))
-
-#####add validations
+    # Relationships
+    friender_user = db.relationship('User', foreign_keys=[friender], back_populates='friends_friender')
+    friended_user = db.relationship('User', foreign_keys=[friended], back_populates='friends_friended')
 
 #######################################################################
 
 class Message(db.Model, SerializerMixin):
-    __tablename__ = "Messages"
+    __tablename__ = "messages"
 
     id = db.Column(db.Integer, primary_key=True)
     sender_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     receiver_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    message =db.Column(db.String)
+    message = db.Column(db.String)
 
-
-#####add relationship
-    sender = db.relationship('User', foreign_keys=[sender_id], backref=db.backref('sent_messages', cascade='all, delete-orphan'))
-    receiver = db.relationship('User', foreign_keys=[receiver_id], backref=db.backref('received_messages', cascade='all, delete-orphan'))
-
-#####add validations
+    # Relationships
+    sender = db.relationship('User', back_populates='sent_messages', foreign_keys=[sender_id])
+    receiver = db.relationship('User', back_populates='received_messages', foreign_keys=[receiver_id])
 
 #######################################################################
