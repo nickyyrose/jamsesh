@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 
 const Messages = () => (
   <div>
-    {/* Display message threads */}
+    {/* Display messages */}
     <Link to="/profile">Back to Profile</Link>
     <Link to="/">Home</Link>
   </div>

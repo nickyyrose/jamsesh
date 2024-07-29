@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 
 const UserInstruments = () => (
   <div>
-    {/* Display list of user's instruments */}
+    {/* Display user instruments */}
     <Link to="/profile">Back to Profile</Link>
     <Link to="/">Home</Link>
   </div>

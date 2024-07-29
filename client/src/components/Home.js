@@ -14,8 +14,8 @@ const Home = () => (
     <Link to="/browse">Browse Users</Link>
     <Link to="/friends">View Friends</Link>
     <Link to="/messages">Messages</Link>
-    {/* Display main user picture here */}
-    <UserProfile /> {/* This component should display the main user picture */}
+    {/* main picture */}
+    <UserProfile /> {/* main picture */}
   </div>
 );
 
